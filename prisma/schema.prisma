@@ -49,6 +49,8 @@ model Product {
   vendorId String
   vendor   User   @relation(fields: [vendorId], references: [id])
 
+  orderItems OrderItem[]
+
   @@index([vendorId])
 }
 
@@ -97,6 +99,8 @@ model ProductVariant {
   cartItems CartItem[]
 
   wishlistItems WishlistItem[]
+
+  orderItems OrderItem[]
 
   createdAt DateTime @default(now())
 }
@@ -168,4 +172,48 @@ model User {
   wishlist WishlistItem[]
 
   products Product[]
+  orders Order[]
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id          String @id @default(uuid())
+
+  userId      String
+  user        User @relation(fields: [userId], references: [id])
+
+  status      OrderStatus @default(PENDING)
+
+  totalAmount Float
+
+  items       OrderItem[]
+
+  createdAt   DateTime @default(now())
+}
+
+
+model OrderItem {
+  id          String @id @default(uuid())
+
+  orderId     String
+  order       Order @relation(fields: [orderId], references: [id])
+
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+
+  variantId   String
+  variant     ProductVariant @relation(fields: [variantId], references: [id])
+
+  quantity    Int
+
+  price       Float
+
+  createdAt   DateTime @default(now())
 }

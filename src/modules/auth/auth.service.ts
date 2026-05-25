@@ -1,4 +1,6 @@
 import { prisma } from "../../lib/prisma";
+import { emailService } from "../../services/email.service";
+import { welcomeTemplate } from "../../templates/welcome.template";
 import { hashPassword, comparePassword } from "../../utils/hash";
 import { generateToken } from "../../utils/jwt";
 
@@ -21,6 +23,14 @@ export const authService = {
         name: data.name,
       },
     });
+
+    await emailService.sendEmail(
+      user.email,
+
+      "Welcome To CARTIFY STORE",
+
+      welcomeTemplate(user.name || "User")
+    );
 
     const token = generateToken({id:user.id, role:user.role});
     return {
