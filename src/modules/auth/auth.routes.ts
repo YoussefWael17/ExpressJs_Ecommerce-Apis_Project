@@ -1,19 +1,29 @@
-// import { Router } from "express";
-// import { authController } from "./auth.controller";
-// import { authMiddleware } from "../../middlewares/auth.middleware";
-
-// const router = Router();
-
-// router.post("/register", authController.register);
-// router.post("/login", authController.login);
-
-// router.get(
-//   "/profile",
-//   authMiddleware,
-//   authController.profile
-// );
-
-// export default router;
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ */
 
 
 import { Router } from "express";
@@ -34,6 +44,31 @@ router.post(
   validate(registerSchema),
   authController.register
 );
+
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ */
 
 router.post(
   "/login",

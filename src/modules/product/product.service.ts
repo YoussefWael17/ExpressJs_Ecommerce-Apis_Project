@@ -83,4 +83,63 @@ export const productService = {
       },
     });
   },
+
+  getNewArrivals: async (limit = 10) => {
+    return prisma.product.findMany({
+      where: {
+        isActive: true,
+        createdAt: {
+          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        },
+      },
+
+      include: {
+        variants: true,
+        images: true,
+        category: true,
+      },
+
+      orderBy: {
+        createdAt: "desc",
+      },
+
+      take: limit,
+    });
+  },
+
+  getBestSellers: async (limit = 10) => {
+    const bestSellers = await prisma.orderItem.groupBy({
+      by: ["productId"],
+
+      _sum: {
+        quantity: true,
+      },
+
+      orderBy: {
+        _sum: {
+          quantity: "desc",
+        },
+      },
+
+      take: limit,
+    });
+
+    const productIds = bestSellers.map(
+      (item) => item.productId
+    );
+
+    return prisma.product.findMany({
+      where: {
+        id: {
+          in: productIds,
+        },
+      },
+
+      include: {
+        variants: true,
+        images: true,
+        category: true,
+      },
+    });
+  },
 };

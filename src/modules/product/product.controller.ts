@@ -49,4 +49,36 @@ export const productController = {
       });
     }
   },
+
+  getNewArrivals: async (req: Request, res: Response) => {
+    try {
+      const limit = Number(req.query.limit) || 10;
+
+      const products = await productService.getNewArrivals(limit);
+
+      res.json(products);
+
+    } catch (error: any) {
+      res.status(500).json({
+        message: error.message,
+      });
+    }
+  },
+
+  getBestSellers: async (req: Request, res: Response) => {
+    try {
+      const limit = Number(req.query.limit) || 10;
+
+      const products =
+        await productService.getBestSellers(limit);
+
+      res.json(products);
+
+    } catch (error: any) {
+      res.status(500).json({
+        message: error.message,
+      });
+    }
+  },
+
 };

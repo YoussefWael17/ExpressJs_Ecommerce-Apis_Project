@@ -6,6 +6,10 @@ import orderRoutes from "./modules/order/order.routes";
 import paymentRoutes from "./modules/payment/payment.routes";
 import { stripeWebhook } from "./modules/payment/payment.webhook";
 
+import swaggerUi from "swagger-ui-express";
+
+import { swaggerSpec } from "./docs/swagger";
+
 const app = express();
 
 app.post(
@@ -15,6 +19,12 @@ app.post(
 );
 
 app.use(express.json());
+
+app.use(
+  "/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec)
+);
 
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
