@@ -9,6 +9,8 @@ import { stripeWebhook } from "./modules/payment/payment.webhook";
 import swaggerUi from "swagger-ui-express";
 
 import { swaggerSpec } from "./docs/swagger";
+import wishlistRoutes from "./modules/wishlist/wishlist.routes";
+import { errorMiddleware } from "./middlewares/error.middleware";
 
 const app = express();
 
@@ -31,6 +33,9 @@ app.use("/products", productRoutes);
 app.use("/cart", cartRoutes);
 app.use("/orders", orderRoutes);
 app.use("/payments", paymentRoutes);
+app.use("/wishlist", wishlistRoutes);
+
+app.use(errorMiddleware);
 
 app.get("/", (req, res) => {
   res.json({ message: "API is working 🚀" });

@@ -58,6 +58,139 @@ export const swaggerSpec = swaggerJSDoc({
                 },
             },
             },
+
+            CartItem: {
+              type: "object",
+
+              properties: {
+                id: {
+                  type: "string",
+                },
+
+                quantity: {
+                  type: "integer",
+                },
+
+                createdAt: {
+                  type: "string",
+                  format: "date-time",
+                },
+
+                variant: {
+                  type: "object",
+
+                  properties: {
+                    id: {
+                      type: "string",
+                    },
+
+                    sku: {
+                      type: "string",
+                    },
+
+                    price: {
+                      type: "number",
+                    },
+
+                    stock: {
+                      type: "integer",
+                    },
+
+                    product: {
+                      $ref: "#/components/schemas/Product",
+                    },
+                  },
+                },
+              },
+            },
+
+            Cart: {
+              type: "object",
+
+              properties: {
+                id: {
+                  type: "string",
+                },
+
+                userId: {
+                  type: "string",
+                },
+
+                items: {
+                  type: "array",
+
+                  items: {
+                    $ref: "#/components/schemas/CartItem",
+                  },
+                },
+              },
+            },
+
+            OrderItem: {
+              type: "object",
+
+              properties: {
+                id: {
+                  type: "string",
+                },
+
+                quantity: {
+                  type: "integer",
+                },
+
+                price: {
+                  type: "number",
+                },
+
+                product: {
+                  $ref: "#/components/schemas/Product",
+                },
+              },
+            },
+
+            Order: {
+              type: "object",
+
+              properties: {
+                id: {
+                  type: "string",
+                },
+
+                userId: {
+                  type: "string",
+                },
+
+                status: {
+                  type: "string",
+
+                  enum: [
+                    "PENDING",
+                    "PAID",
+                    "SHIPPED",
+                    "DELIVERED",
+                    "CANCELLED",
+                  ],
+                },
+
+                totalPrice: {
+                  type: "number",
+                },
+
+                createdAt: {
+                  type: "string",
+                  format: "date-time",
+                },
+
+                items: {
+                  type: "array",
+
+                  items: {
+                    $ref: "#/components/schemas/OrderItem",
+                  },
+                },
+              },
+            },
+
         },
         securitySchemes: {
         bearerAuth: {
