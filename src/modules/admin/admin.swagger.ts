@@ -255,3 +255,91 @@ import { Express } from "express";
  *                 revenue:
  *                   type: number
  */
+
+
+/*
+|--------------------------------------------------------------------------
+| CREATE
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * @swagger
+ * /admin/categories:
+ *   post:
+ *     summary: Create category
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - slug
+ *             properties:
+ *               name:
+ *                 type: string
+ *               slug:
+ *                 type: string
+ *               image:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Category created
+ */
+
+/*
+|--------------------------------------------------------------------------
+| UPDATE
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * @swagger
+ * /admin/categories/{id}:
+ *   patch:
+ *     summary: Update category
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Category updated
+ */
+
+/*
+|--------------------------------------------------------------------------
+| DELETE
+|--------------------------------------------------------------------------
+*/
+
+/**
+ * @swagger
+ * /admin/categories/{id}:
+ *   delete:
+ *     summary: Delete category
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Category deleted
+ */

@@ -1,42 +1,27 @@
 import { Response } from "express";
 
-import { prisma } from "../../lib/prisma";
-
 import { AuthRequest } from "../../types/auth-request";
 
 import { asyncHandler } from "../../utils/asyncHandler";
 
-import { AppError } from "../../utils/AppError";
-
-import { productService } from "../product/product.service";
+import { vendorService } from "./vendor.service";
 
 export const vendorController = {
   /*
   |--------------------------------------------------------------------------
-  | Get My Products
+  | Products
   |--------------------------------------------------------------------------
   */
+
   getMyProducts: asyncHandler(
     async (
       req: AuthRequest,
       res: Response
     ) => {
       const products =
-        await prisma.product.findMany({
-          where: {
-            vendorId: req.user!.id,
-          },
-
-          include: {
-            variants: true,
-            images: true,
-            category: true,
-          },
-
-          orderBy: {
-            createdAt: "desc",
-          },
-        });
+        await vendorService.getMyProducts(
+          req.user!.id
+        );
 
       res.json({
         success: true,
@@ -45,42 +30,16 @@ export const vendorController = {
     }
   ),
 
-  /*
-  |--------------------------------------------------------------------------
-  | Get Single Product
-  |--------------------------------------------------------------------------
-  */
   getSingleProduct: asyncHandler(
     async (
       req: AuthRequest,
       res: Response
     ) => {
       const product =
-        await prisma.product.findFirst({
-          where: {
-            id: req.params.id as string,
-            vendorId: req.user!.id,
-          },
-
-          include: {
-            variants: {
-              include: {
-                size: true,
-                color: true,
-              },
-            },
-
-            images: true,
-            category: true,
-          },
-        });
-
-      if (!product) {
-        throw new AppError(
-          "Product not found",
-          404
+        await vendorService.getSingleProduct(
+          req.params.id as string,
+          req.user!.id
         );
-      }
 
       res.json({
         success: true,
@@ -89,20 +48,16 @@ export const vendorController = {
     }
   ),
 
-  /*
-  |--------------------------------------------------------------------------
-  | Create Product
-  |--------------------------------------------------------------------------
-  */
   createProduct: asyncHandler(
     async (
       req: AuthRequest,
       res: Response
     ) => {
       const product =
-        await productService.create(
+        await vendorService.createProduct(
           req.body,
-          req.user!.id
+          req.user!.id,
+          req.user!.role
         );
 
       res.status(201).json({
@@ -114,18 +69,13 @@ export const vendorController = {
     }
   ),
 
-  /*
-  |--------------------------------------------------------------------------
-  | Update Product
-  |--------------------------------------------------------------------------
-  */
   updateProduct: asyncHandler(
     async (
       req: AuthRequest,
       res: Response
     ) => {
       const product =
-        await productService.update(
+        await vendorService.updateProduct(
           req.params.id as string,
           req.body,
           req.user!.id,
@@ -141,17 +91,12 @@ export const vendorController = {
     }
   ),
 
-  /*
-  |--------------------------------------------------------------------------
-  | Delete Product
-  |--------------------------------------------------------------------------
-  */
   deleteProduct: asyncHandler(
     async (
       req: AuthRequest,
       res: Response
     ) => {
-      await productService.delete(
+      await vendorService.deleteProduct(
         req.params.id as string,
         req.user!.id,
         req.user!.role
@@ -167,48 +112,19 @@ export const vendorController = {
 
   /*
   |--------------------------------------------------------------------------
-  | Vendor Orders
+  | Orders
   |--------------------------------------------------------------------------
   */
+
   getVendorOrders: asyncHandler(
     async (
       req: AuthRequest,
       res: Response
     ) => {
       const orders =
-        await prisma.order.findMany({
-          where: {
-            items: {
-              some: {
-                product: {
-                  vendorId:
-                    req.user!.id,
-                },
-              },
-            },
-          },
-
-          include: {
-            items: {
-              include: {
-                product: true,
-                variant: true,
-              },
-            },
-
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-          },
-
-          orderBy: {
-            createdAt: "desc",
-          },
-        });
+        await vendorService.getVendorOrders(
+          req.user!.id
+        );
 
       res.json({
         success: true,
@@ -217,60 +133,21 @@ export const vendorController = {
     }
   ),
 
-  /*
-  |--------------------------------------------------------------------------
-  | Single Vendor Order
-  |--------------------------------------------------------------------------
-  */
   getSingleVendorOrder: asyncHandler(
-      async (
-        req: AuthRequest,
-        res: Response
-      ) => {
-        const order =
-          await prisma.order.findFirst({
-            where: {
-              id: req.params.id as string,
+    async (
+      req: AuthRequest,
+      res: Response
+    ) => {
+      const order =
+        await vendorService.getSingleVendorOrder(
+          req.params.id as string,
+          req.user!.id
+        );
 
-              items: {
-                some: {
-                  product: {
-                    vendorId:
-                      req.user!.id,
-                  },
-                },
-              },
-            },
-
-            include: {
-              items: {
-                include: {
-                  product: true,
-                  variant: true,
-                },
-              },
-
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                },
-              },
-            },
-          });
-
-        if (!order) {
-          throw new AppError(
-            "Order not found",
-            404
-          );
-        }
-
-        res.json({
-          success: true,
-          data: order,
-        });
-      }
-    ),
+      res.json({
+        success: true,
+        data: order,
+      });
+    }
+  ),
 };

@@ -12,6 +12,7 @@ import {
   changeRoleSchema,
 } from "./admin.validation";
 import { updateOrderStatusSchema } from "../order/order.validation";
+import { createCategorySchema, updateCategorySchema } from "../category/category.validation";
 
 
 const router = Router();
@@ -75,5 +76,22 @@ router.patch(
 */
 
 router.get("/stats", adminController.getStats);
+
+router.post(
+  "/categories",
+  validate(createCategorySchema),
+  adminController.createCategory
+);
+
+router.patch(
+  "/categories/:id",
+  validate(updateCategorySchema),
+  adminController.updateCategory
+);
+
+router.delete(
+  "/categories/:id",
+  adminController.deleteCategory
+);
 
 export default router;

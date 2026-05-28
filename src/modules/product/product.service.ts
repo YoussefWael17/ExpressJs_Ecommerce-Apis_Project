@@ -1,158 +1,31 @@
-// import { prisma } from "../../lib/prisma";
-
-// export const productService = {
-//   create: async (data: any, vendorId: string) => {
-//     return prisma.product.create({
-//       data: {
-//         title: data.title,
-//         slug: data.slug,
-//         description: data.description,
-//         thumbnail: data.thumbnail,
-//         categoryId: data.categoryId,
-//         vendorId,
-
-//         variants: {
-//           create: data.variants,
-//         },
-
-//         images: {
-//           create: data.images,
-//         },
-//       },
-
-//       include: {
-//         variants: true,
-//         images: true,
-//         category: true,
-//       },
-//     });
-//   },
-
-//   getAll: async (query: any) => {
-//     const page = Number(query.page) || 1;
-//     const limit = Number(query.limit) || 10;
-
-//     const skip = (page - 1) * limit;
-
-//     return prisma.product.findMany({
-//       skip,
-//       take: limit,
-
-//       where: {
-//         isActive: true,
-
-//         ...(query.search && {
-//           title: {
-//             contains: query.search,
-//             mode: "insensitive",
-//           },
-//         }),
-
-//         ...(query.categoryId && {
-//           categoryId: query.categoryId,
-//         }),
-//       },
-
-//       include: {
-//         variants: true,
-//         images: true,
-//         category: true,
-//       },
-
-//       orderBy: {
-//         createdAt: "desc",
-//       },
-//     });
-//   },
-
-//   getOne: async (id: string) => {
-//     return prisma.product.findUnique({
-//       where: { id },
-
-//       include: {
-//         variants: {
-//           include: {
-//             size: true,
-//             color: true,
-//           },
-//         },
-
-//         images: true,
-//         category: true,
-//         reviews: true,
-//       },
-//     });
-//   },
-
-//   getNewArrivals: async (limit = 10) => {
-//     return prisma.product.findMany({
-//       where: {
-//         isActive: true,
-//         createdAt: {
-//           gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-//         },
-//       },
-
-//       include: {
-//         variants: true,
-//         images: true,
-//         category: true,
-//       },
-
-//       orderBy: {
-//         createdAt: "desc",
-//       },
-
-//       take: limit,
-//     });
-//   },
-
-//   getBestSellers: async (limit = 10) => {
-//     const bestSellers = await prisma.orderItem.groupBy({
-//       by: ["productId"],
-
-//       _sum: {
-//         quantity: true,
-//       },
-
-//       orderBy: {
-//         _sum: {
-//           quantity: "desc",
-//         },
-//       },
-
-//       take: limit,
-//     });
-
-//     const productIds = bestSellers.map(
-//       (item) => item.productId
-//     );
-
-//     return prisma.product.findMany({
-//       where: {
-//         id: {
-//           in: productIds,
-//         },
-//       },
-
-//       include: {
-//         variants: true,
-//         images: true,
-//         category: true,
-//       },
-//     });
-//   },
-// };
-
 import { prisma } from "../../lib/prisma";
 
 import { AppError } from "../../utils/AppError";
+import { resolveColor } from "./resolvers/color.resolver";
+import { resolveSize } from "./resolvers/size.resolver";
 
 export const productService = {
   create: async (
     data: any,
-    vendorId: string
+    vendorId: string,
+    vendorRole: string
   ) => {
+    const variants = await Promise.all(
+      data.variants.map(async (v: any) => {
+        const color = await resolveColor(v.color, vendorRole);
+        const size = await resolveSize(v.size, vendorRole);
+
+        return {
+          sku: v.sku,
+          price: v.price,
+          discountPrice: v.discountPrice ?? null,
+          stock: v.stock ?? 0,
+          colorId: color.id,
+          sizeId: size.id,
+        };
+      })
+    );
+
     return prisma.product.create({
       data: {
         title: data.title,
@@ -162,12 +35,17 @@ export const productService = {
         categoryId: data.categoryId,
         vendorId,
 
+        // ✅ FIXED VARIANTS
         variants: {
-          create: data.variants,
+          create: variants,
         },
 
+        // images safe
         images: {
-          create: data.images,
+          create: (data.images || []).map((img: any) => ({
+            image: img.image,
+            isPrimary: img.isPrimary ?? false,
+          })),
         },
       },
 
@@ -178,7 +56,6 @@ export const productService = {
             color: true,
           },
         },
-
         images: true,
         category: true,
       },
@@ -395,52 +272,85 @@ export const productService = {
     userId: string,
     userRole: string
   ) => {
-    const product =
-      await prisma.product.findUnique({
-        where: {
-          id: productId,
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new AppError("Product not found", 404);
+    }
+
+    if (product.vendorId !== userId && userRole !== "ADMIN") {
+      throw new AppError("Forbidden", 403);
+    }
+
+    return prisma.$transaction(async (tx) => {
+      // 1. Update product basic info
+      await tx.product.update({
+        where: { id: productId },
+        data: {
+          title: data.title ?? product.title,
+          slug: data.slug ?? product.slug,
+          description: data.description ?? product.description,
+          thumbnail: data.thumbnail ?? product.thumbnail,
+          categoryId: data.categoryId ?? product.categoryId,
+          isActive: data.isActive ?? product.isActive,
+          isSale: data.isSale ?? product.isSale,
         },
       });
 
-    if (!product) {
-      throw new AppError(
-        "Product not found",
-        404
-      );
-    }
+      // 2. REPLACE VARIANTS
+      if (Array.isArray(data.variants)) {
+        await tx.productVariant.deleteMany({
+          where: { productId },
+        });
 
-    // vendor can edit only own products
-    // admin can edit any product
-    if (
-      product.vendorId !== userId &&
-      userRole !== "ADMIN"
-    ) {
-      throw new AppError(
-        "Forbidden",
-        403
-      );
-    }
+        if (data.variants.length > 0) {
+          await tx.productVariant.createMany({
+            data: data.variants.map((v: any) => ({
+              sku: v.sku,
+              price: v.price,
+              discountPrice: v.discountPrice ?? null,
+              stock: v.stock ?? 0,
+              productId,
+              sizeId: v.sizeId,
+              colorId: v.colorId,
+            })),
+          });
+        }
+      }
 
-    return prisma.product.update({
-      where: {
-        id: productId,
-      },
+      // 3. REPLACE IMAGES
+      if (Array.isArray(data.images)) {
+        await tx.productImage.deleteMany({
+          where: { productId },
+        });
 
-      data: {
-        title: data.title,
-        slug: data.slug,
-        description: data.description,
-        thumbnail: data.thumbnail,
-        categoryId: data.categoryId,
-        isActive: data.isActive,
-        isSale: data.isSale,
-      },
+        if (data.images.length > 0) {
+          await tx.productImage.createMany({
+            data: data.images.map((img: any) => ({
+              image: img.image,
+              isPrimary: img.isPrimary ?? false,
+              productId,
+            })),
+          });
+        }
+      }
 
-      include: {
-        variants: true,
-        images: true,
-        category: true,
-      },
+      // 4. return fresh product
+      return tx.product.findUnique({
+        where: { id: productId },
+        include: {
+          variants: {
+            include: {
+              size: true,
+              color: true,
+            },
+          },
+          images: true,
+          category: true,
+        },
+      });
     });
   },
 
