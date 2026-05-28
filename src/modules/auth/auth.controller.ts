@@ -21,6 +21,20 @@ export const authController = {
     }
   },
 
+  googleAuth: async (req: Request, res: Response) => {
+    try {
+      const { token } = req.body;
+
+      const result = await authService.googleLogin(token);
+
+      res.status(200).json(result);
+    } catch (error: any) {
+      res.status(400).json({
+        message: error.message,
+      });
+    }
+  },
+
   profile: async (req: AuthRequest, res: Response) => {
     res.json({
       user: req.user,

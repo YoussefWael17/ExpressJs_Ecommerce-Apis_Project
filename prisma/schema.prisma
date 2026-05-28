@@ -160,21 +160,36 @@ model WishlistItem {
 }
 
 model User {
-  id       String  @id @default(uuid())
-  email    String  @unique
-  password String
+  id       String   @id @default(uuid())
+  email    String   @unique
+
+  // خليه optional عشان مستخدم Google
+  password String?
+
   name     String?
+
+  // نوع تسجيل الدخول
+  provider AuthProvider @default(CREDENTIALS)
+
+  // بيانات Google
+  googleId String? @unique
+  avatar   String?
 
   role     Role @default(CUSTOMER)
 
   createdAt DateTime @default(now())
 
-  cart     Cart?
-  reviews  Review[]
-  wishlist WishlistItem[]
+  cart      Cart?
+  reviews   Review[]
+  wishlist  WishlistItem[]
 
-  products Product[]
-  orders Order[]
+  products  Product[]
+  orders    Order[]
+}
+
+enum AuthProvider {
+  CREDENTIALS
+  GOOGLE
 }
 
 enum OrderStatus {
