@@ -16,7 +16,7 @@ export const errorMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  console.error(err);
+  // console.error(err);
 
   // App Error
   if (err instanceof AppError) {

@@ -191,6 +191,84 @@ export const swaggerSpec = swaggerJSDoc({
               },
             },
 
+            CreateProductInput: {
+              type: "object",
+
+              properties: {
+                title: {
+                  type: "string",
+                },
+
+                slug: {
+                  type: "string",
+                },
+
+                description: {
+                  type: "string",
+                },
+
+                thumbnail: {
+                  type: "string",
+                },
+
+                categoryId: {
+                  type: "string",
+                },
+
+                variants: {
+                  type: "array",
+
+                  items: {
+                    type: "object",
+
+                    properties: {
+                      sku: {
+                        type: "string",
+                      },
+
+                      price: {
+                        type: "number",
+                      },
+
+                      discountPrice: {
+                        type: "number",
+                      },
+
+                      stock: {
+                        type: "number",
+                      },
+
+                      sizeId: {
+                        type: "string",
+                      },
+
+                      colorId: {
+                        type: "string",
+                      },
+                    },
+                  },
+                },
+
+                images: {
+                  type: "array",
+
+                  items: {
+                    type: "object",
+
+                    properties: {
+                      image: {
+                        type: "string",
+                      },
+
+                      isPrimary: {
+                        type: "boolean",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+
         },
         securitySchemes: {
         bearerAuth: {

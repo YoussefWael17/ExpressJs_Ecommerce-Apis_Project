@@ -167,6 +167,8 @@ model User {
 
   role     Role @default(CUSTOMER)
 
+  createdAt DateTime @default(now())
+
   cart     Cart?
   reviews  Review[]
   wishlist WishlistItem[]

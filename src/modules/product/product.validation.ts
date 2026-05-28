@@ -1,33 +1,37 @@
 import { z } from "zod";
 
 export const createProductSchema = z.object({
-  title: z.string().min(3),
+  title: z.string().min(2),
 
-  slug: z.string().min(3),
+  slug: z.string().min(2),
 
-  description: z.string(),
+  description: z.string().optional(),
 
-  categoryId: z.string().uuid(),
+  thumbnail: z.string().url().optional(),
 
-  thumbnail: z.string(),
+  categoryId: z.string(),
 
   variants: z.array(
     z.object({
-      sku: z.string(),
+      sku: z.string().optional(),
 
       price: z.number().positive(),
 
-      stock: z.number().min(0),
+      discountPrice: z.number().optional(),
 
-      sizeId: z.string().uuid().optional(),
+      stock: z.number().int().nonnegative(),
 
-      colorId: z.string().uuid().optional(),
+      sizeId: z.string().optional(),
+
+      colorId: z.string().optional(),
     })
   ),
 
   images: z.array(
     z.object({
-      image: z.string(),
+      image: z.string().url(),
+
+      isPrimary: z.boolean().optional(),
     })
   ),
 });

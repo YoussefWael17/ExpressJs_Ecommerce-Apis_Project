@@ -11,6 +11,8 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./docs/swagger";
 import wishlistRoutes from "./modules/wishlist/wishlist.routes";
 import { errorMiddleware } from "./middlewares/error.middleware";
+import vendorRoutes from "./modules/vendor/vendor.routes";
+import adminRoutes from "./modules/admin/admin.routes";
 
 const app = express();
 
@@ -34,6 +36,8 @@ app.use("/cart", cartRoutes);
 app.use("/orders", orderRoutes);
 app.use("/payments", paymentRoutes);
 app.use("/wishlist", wishlistRoutes);
+app.use("/vendor", vendorRoutes);
+app.use("/admin", adminRoutes);
 
 app.use(errorMiddleware);
 

@@ -193,4 +193,28 @@ export const productController = {
       });
     }
   ),
+
+  update: asyncHandler(
+    async (
+      req: AuthRequest,
+      res: Response
+    ) => {
+      const product =
+        await productService.update(
+          req.params.id as string,
+          req.body,
+          req.user!.id,
+          req.user!.role
+        );
+
+      res.json({
+        success: true,
+        message:
+          "Product updated successfully",
+        data: product,
+      });
+    }
+  ),
+
+  
 };

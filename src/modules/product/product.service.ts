@@ -388,4 +388,99 @@ export const productService = {
       },
     });
   },
+
+  update: async (
+    productId: string,
+    data: any,
+    userId: string,
+    userRole: string
+  ) => {
+    const product =
+      await prisma.product.findUnique({
+        where: {
+          id: productId,
+        },
+      });
+
+    if (!product) {
+      throw new AppError(
+        "Product not found",
+        404
+      );
+    }
+
+    // vendor can edit only own products
+    // admin can edit any product
+    if (
+      product.vendorId !== userId &&
+      userRole !== "ADMIN"
+    ) {
+      throw new AppError(
+        "Forbidden",
+        403
+      );
+    }
+
+    return prisma.product.update({
+      where: {
+        id: productId,
+      },
+
+      data: {
+        title: data.title,
+        slug: data.slug,
+        description: data.description,
+        thumbnail: data.thumbnail,
+        categoryId: data.categoryId,
+        isActive: data.isActive,
+        isSale: data.isSale,
+      },
+
+      include: {
+        variants: true,
+        images: true,
+        category: true,
+      },
+    });
+  },
+
+  delete: async (
+    productId: string,
+    userId: string,
+    userRole: string
+  ) => {
+    const product =
+      await prisma.product.findUnique({
+        where: {
+          id: productId,
+        },
+      });
+
+    if (!product) {
+      throw new AppError(
+        "Product not found",
+        404
+      );
+    }
+
+    if (
+      product.vendorId !== userId &&
+      userRole !== "ADMIN"
+    ) {
+      throw new AppError(
+        "Forbidden",
+        403
+      );
+    }
+
+    await prisma.product.delete({
+      where: {
+        id: productId,
+      },
+    });
+
+    return {
+      success: true,
+    };
+  },
 };
