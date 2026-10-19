@@ -3,6 +3,7 @@ import { Router } from "express";
 import { productController } from "./product.controller";
 
 import { validate } from "../../middlewares/validate.middleware";
+import { optionalAuthMiddleware } from "../../middlewares/optionalAuth.middleware";
 
 
 const router = Router();
@@ -16,6 +17,9 @@ const router = Router();
 router.get("/new-arrivals", productController.getNewArrivals);
 
 router.get("/best-sellers", productController.getBestSellers);
+
+router.get("/flash-sales",  optionalAuthMiddleware, productController.getFlashSales);
+// router.get("/flash-sales", productController.getFlashSales);
 
 /*
 |--------------------------------------------------------------------------

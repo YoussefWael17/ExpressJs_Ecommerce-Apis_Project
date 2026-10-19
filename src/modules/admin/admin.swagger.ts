@@ -279,11 +279,8 @@ import { Express } from "express";
  *             type: object
  *             required:
  *               - name
- *               - slug
  *             properties:
  *               name:
- *                 type: string
- *               slug:
  *                 type: string
  *               image:
  *                 type: string

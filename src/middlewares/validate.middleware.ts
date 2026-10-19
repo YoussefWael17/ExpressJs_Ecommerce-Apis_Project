@@ -16,6 +16,7 @@ export const validate = (
       next();
 
     } catch (error: any) {
+      console.log(error);
       return res.status(400).json({
         message: "Validation failed",
 

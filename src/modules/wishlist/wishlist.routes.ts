@@ -47,7 +47,6 @@ router.post(
 router.delete(
   "/items/:id",
   authMiddleware,
-  validate(removeWishlistSchema),
   wishlistController.remove
 );
 

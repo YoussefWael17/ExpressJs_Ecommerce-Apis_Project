@@ -79,6 +79,7 @@ export const productService = {
 
         where: {
           isActive: true,
+          isPublished: true,
 
           ...(query.search && {
             title: {
@@ -102,6 +103,14 @@ export const productService = {
             },
           },
 
+          reviews: {
+            select: {
+              id: true,
+              rating: true,
+              comment: true
+              }
+          },
+
           images: true,
           category: true,
         },
@@ -109,6 +118,24 @@ export const productService = {
         orderBy: {
           createdAt: "desc",
         },
+      });
+
+      const productsWithStats = products.map(product => {
+        const totalReviews = product.reviews.length;
+
+        const avgRating =
+          totalReviews > 0
+            ? product.reviews.reduce(
+                (sum, review) => sum + review.rating,
+                0
+              ) / totalReviews
+            : 0;
+
+        return {
+          ...product,
+          totalReviews,
+          avgRating: Number(avgRating.toFixed(1)),
+        };
       });
 
     const total =
@@ -119,15 +146,12 @@ export const productService = {
       });
 
     return {
-      data: products,
-
-      meta: {
+      products: productsWithStats,
+      pagination: {
         page,
         limit,
         total,
-        totalPages: Math.ceil(
-          total / limit
-        ),
+        totalPages: Math.ceil(total / limit),
       },
     };
   },
@@ -185,6 +209,7 @@ export const productService = {
     return prisma.product.findMany({
       where: {
         isActive: true,
+        isPublished: true,
 
         createdAt: {
           gte: new Date(
@@ -250,6 +275,7 @@ export const productService = {
         },
 
         isActive: true,
+        isPublished: true,
       },
 
       include: {
@@ -265,6 +291,160 @@ export const productService = {
       },
     });
   },
+
+//   getFlashSales: async (limit = 10) => {
+//   const now = new Date();
+
+//   const products = await prisma.product.findMany({
+//     where: {
+//       isActive: true,
+//       isPublished: true,
+
+//       salePercentage: {
+//         not: null,
+//       },
+
+//       saleStartDate: {
+//         lte: now,
+//       },
+
+//       saleEndDate: {
+//         gte: now,
+//       },
+//     },
+
+//     include: {
+//       variants: {
+//         include: {
+//           size: true,
+//           color: true,
+//         },
+//       },
+
+//       images: true,
+//       category: true,
+//       reviews: true,
+//     },
+
+//     orderBy: {
+//       salePercentage: "desc",
+//     },
+
+//     take: limit,
+//   });
+
+//   const productsWithStats = products.map((product) => {
+//     const totalReviews = product.reviews.length;
+
+//     const avgRating =
+//       totalReviews > 0
+//         ? product.reviews.reduce(
+//             (sum, review) => sum + review.rating,
+//             0
+//           ) / totalReviews
+//         : 0;
+
+//     return {
+//       ...product,
+//       totalReviews,
+//       avgRating: Number(avgRating.toFixed(1)),
+//     };
+//   });
+
+//   return productsWithStats;
+// },
+
+  getFlashSales: async (limit = 10, userId?: string) => {
+  const now = new Date();
+
+  const products = await prisma.product.findMany({
+    where: {
+      isActive: true,
+      isPublished: true,
+
+      salePercentage: {
+        not: null,
+      },
+
+      saleStartDate: {
+        lte: now,
+      },
+
+      saleEndDate: {
+        gte: now,
+      },
+    },
+
+    include: {
+      variants: {
+        include: {
+          size: true,
+          color: true,
+
+          cartItems: userId
+            ? {
+                where: {
+                  cart: {
+                    userId,
+                  },
+                },
+              }
+            : false,
+
+          wishlistItems: userId
+            ? {
+                where: {
+                  userId,
+                },
+              }
+            : false,
+        },
+      },
+
+      images: true,
+      category: true,
+      reviews: true,
+    },
+
+    orderBy: {
+      salePercentage: "desc",
+    },
+
+    take: limit,
+  });
+
+  const productsWithStats = products.map((product) => {
+    const totalReviews = product.reviews.length;
+
+    const avgRating =
+      totalReviews > 0
+        ? product.reviews.reduce(
+            (sum, review) => sum + review.rating,
+            0
+          ) / totalReviews
+        : 0;
+
+    return {
+      ...product,
+      totalReviews,
+      avgRating: Number(avgRating.toFixed(1)),
+
+      isInCart: userId
+        ? product.variants.some(
+            variant => variant.cartItems.length > 0
+          )
+        : false,
+
+      isInWishlist: userId
+        ? product.variants.some(
+            variant => variant.wishlistItems.length > 0
+          )
+        : false,
+    };
+  });
+
+  return productsWithStats;
+},
 
   update: async (
     productId: string,
@@ -295,7 +475,6 @@ export const productService = {
           thumbnail: data.thumbnail ?? product.thumbnail,
           categoryId: data.categoryId ?? product.categoryId,
           isActive: data.isActive ?? product.isActive,
-          isSale: data.isSale ?? product.isSale,
         },
       });
 

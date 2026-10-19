@@ -133,59 +133,147 @@ export const wishlistService = {
     });
   },
 
-  getUserWishlist: async (
-    userId: string
-  ) => {
-    return prisma.wishlistItem.findMany({
-      where: {
-        userId,
-      },
+  // getUserWishlist: async (
+  //   userId: string
+  // ) => {
+  //   return prisma.wishlistItem.findMany({
+  //     where: {
+  //       userId,
+  //     },
 
-      include: {
-        variant: {
-          include: {
-            product: true,
-            size: true,
-            color: true,
+  //     include: {
+  //       variant: {
+  //         include: {
+  //           product: { 
+  //             include: {
+  //               category: true,
+  //             },
+  //           },
+  //           size: true,
+  //           color: true,
+  //         },
+  //       },
+        
+  //     },
+
+  //     orderBy: {
+  //       createdAt: "desc",
+  //     },
+  //   });
+  // },
+
+  getUserWishlist: async (userId: string) => {
+  const wishlist = await prisma.wishlistItem.findMany({
+    where: {
+      userId,
+    },
+    include: {
+      variant: {
+        include: {
+          product: {
+            include: {
+              category: true,
+            },
           },
+          size: true,
+          color: true,
         },
       },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
 
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-  },
+  return wishlist.map((item) => ({
+    ...item.variant.product,
+    // variant: {
+    //   id: item.variant.id,
+    //   sku: item.variant.sku,
+    //   price: item.variant.price,
+    //   discountPrice: item.variant.discountPrice,
+    //   stock: item.variant.stock,
+    //   size: item.variant.size,
+    //   color: item.variant.color,
+    // },
+      variants: [
+    {
+      id: item.variant.id,
+      sku: item.variant.sku,
+      price: item.variant.price,
+      discountPrice: item.variant.discountPrice,
+      stock: item.variant.stock,
+      size: item.variant.size,
+      color: item.variant.color,
+    },
+  ],
+  wishlistId: item.id,
+    addedAt: item.createdAt,
+    
+  }));
+},
 
-  remove: async (
-    userId: string,
-    wishlistItemId: string
-  ) => {
-    const item =
-      await prisma.wishlistItem.findFirst(
-        {
-          where: {
-            id: wishlistItemId,
-            userId,
-          },
-        }
-      );
 
-    if (!item) {
-      throw new AppError(
-        "Wishlist item not found",
-        404
-      );
-    }
+  // remove: async (
+  //   userId: string,
+  //   wishlistItemId: string
+  // ) => {
+  //   const item =
+  //     await prisma.wishlistItem.findFirst(
+  //       {
+  //         where: {
+  //           id: wishlistItemId,
+  //           userId,
+  //         },
+  //       }
+  //     );
 
-    await prisma.wishlistItem.delete({
-      where: {
-        id: wishlistItemId,
-      },
-    });
+  //   if (!item) {
+  //     throw new AppError(
+  //       "Wishlist item not found",
+  //       404
+  //     );
+  //   }
 
-    return {
-      success: true,
-    };
-  },
+  //   await prisma.wishlistItem.delete({
+  //     where: {
+  //       id: wishlistItemId,
+  //     },
+  //   });
+
+  //   return {
+  //     success: true,
+  //   };
+  // },
+
+ remove: async (
+  userId: string,
+  variantId: string
+) => {
+  const item = await prisma.wishlistItem.findFirst({
+    where: {
+      userId,
+      variantId,
+    },
+  });
+
+  if (!item) {
+    throw new AppError(
+      "Wishlist item not found",
+      404
+    );
+  }
+
+  await prisma.wishlistItem.delete({
+    where: {
+      id: item.id,
+    },
+  });
+
+  return {
+    success: true,
+  };
+},
+  
+
 };

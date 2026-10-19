@@ -1,59 +1,82 @@
 import { prisma } from "../../lib/prisma";
 import { stripe } from "../../lib/stripe";
+import { AppError } from "../../utils/AppError";
 
 export const paymentService = {
-  createCheckoutSession: async (
-    orderId: string,
-    userId: string
-  ) => {
-    const order = await prisma.order.findFirst({
-      where: {
-        id: orderId,
-        userId,
-      },
+  createCheckoutSession: async (userId: string) => {
+    const cart = await prisma.cart.findUnique({
+      where: { userId },
 
       include: {
         items: {
           include: {
-            product: true,
+            variant: {
+              include: {
+                product: true,
+              },
+            },
           },
         },
       },
     });
 
-    if (!order) {
-      throw new Error("Order not found");
+    if (!cart || cart.items.length === 0) {
+      throw new AppError("Cart is empty", 400);
     }
 
-    if (order.status === "PAID") {
-      throw new Error("Order already paid");
-    }
+    const totalAmount = cart.items.reduce(
+      (sum, item) =>
+        sum +
+        item.quantity *
+          (item.variant.discountPrice ??
+            item.variant.price),
+      0
+    );
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
+    const session =
+      await stripe.checkout.sessions.create({
+        mode: "payment",
 
-      mode: "payment",
+        payment_method_types: ["card"],
 
-      line_items: order.items.map((item) => ({
-        price_data: {
-          currency: "usd",
-
-          product_data: {
-            name: item.product.title,
-          },
-
-          unit_amount: Math.round(item.price * 100),
+        metadata: {
+          userId,
         },
 
-        quantity: item.quantity,
-      })),
+        line_items: cart.items.map((item) => ({
+          quantity: item.quantity,
 
-      success_url: `${process.env.CLIENT_URL}/success`,
+          price_data: {
+            currency: "usd",
 
-      cancel_url: `${process.env.CLIENT_URL}/cancel`,
+            product_data: {
+              name:
+                item.variant.product.title,
+            },
 
-      metadata: {
-        orderId: order.id,
+            unit_amount: Math.round(
+              (item.variant.discountPrice ??
+                item.variant.price) * 100
+            ),
+          },
+        })),
+
+        success_url:
+          `${process.env.CLIENT_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+
+        cancel_url:
+          `${process.env.CLIENT_URL}/cart`,
+      });
+
+    await prisma.payment.create({
+      data: {
+        userId,
+
+        stripeSessionId: session.id,
+
+        amount: totalAmount,
+
+        status: "PENDING",
       },
     });
 

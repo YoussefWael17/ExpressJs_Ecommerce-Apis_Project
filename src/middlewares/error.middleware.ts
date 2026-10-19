@@ -9,6 +9,7 @@ import { ZodError } from "zod";
 
 import { AppError } from "../utils/AppError";
 import { Prisma } from "../generated/prisma/client";
+import console from "node:console";
 
 export const errorMiddleware = (
   err: any,
@@ -16,7 +17,7 @@ export const errorMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  // console.error(err);
+  console.error(err);
 
   // App Error
   if (err instanceof AppError) {
@@ -49,7 +50,23 @@ export const errorMiddleware = (
     }
   }
 
-  // JWT Error
+  // // JWT Error
+  // if (err.name === "JsonWebTokenError") {
+  //   return res.status(401).json({
+  //     success: false,
+  //     message: "Invalid token",
+  //   });
+  // }
+
+  // JWT Expired
+  if (err.name === "TokenExpiredError") {
+    return res.status(401).json({
+      success: false,
+      message: "Token expired",
+    });
+  }
+
+  // JWT Invalid
   if (err.name === "JsonWebTokenError") {
     return res.status(401).json({
       success: false,

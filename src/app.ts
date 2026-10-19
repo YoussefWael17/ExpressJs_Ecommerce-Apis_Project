@@ -1,11 +1,14 @@
 import express from "express";
 import authRoutes from "./modules/auth/auth.routes";
 import productRoutes from "./modules/product/product.routes";
+import heroBannerRoutes from "./modules/heroBanner/heroBanner.routes";
+import promoBannerRoutes from "./modules/promoBanner/promoBanner.routes";
 import cartRoutes from "./modules/cart/cart.routes";
 import orderRoutes from "./modules/order/order.routes";
 import paymentRoutes from "./modules/payment/payment.routes";
 import { stripeWebhook } from "./modules/payment/payment.webhook";
 
+import cors from "cors"
 import swaggerUi from "swagger-ui-express";
 
 import { swaggerSpec } from "./docs/swagger";
@@ -14,12 +17,20 @@ import { errorMiddleware } from "./middlewares/error.middleware";
 import vendorRoutes from "./modules/vendor/vendor.routes";
 import adminRoutes from "./modules/admin/admin.routes";
 import categoryRoutes from "./modules/category/category.routes";
+import reviewRoutes from "./modules/review/review.routes";
+
 
 const app = express();
 
+app.use(cors())
+
 app.post(
-  "/webhooks/stripe",
-  express.raw({ type: "application/json" }),
+  "/api/payments/webhook",
+
+  express.raw({
+    type: "application/json",
+  }),
+
   stripeWebhook
 );
 
@@ -39,8 +50,13 @@ app.use("/payments", paymentRoutes);
 app.use("/wishlist", wishlistRoutes);
 app.use("/vendor", vendorRoutes);
 app.use("/admin", adminRoutes);
-app.use("/category", categoryRoutes);
+app.use("/categories", categoryRoutes);
+app.use("/reviews", reviewRoutes);
+app.use("/hero-banners", heroBannerRoutes);
+app.use("/promo-banners", promoBannerRoutes);
 
+
+app.use("/uploads", express.static("uploads"));
 
 app.use(errorMiddleware);
 

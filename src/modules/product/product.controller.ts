@@ -7,6 +7,7 @@ import { AuthRequest } from "../../types/auth-request";
 import { asyncHandler } from "../../utils/asyncHandler";
 
 import { AppError } from "../../utils/AppError";
+import { VariantService } from "../variant/variant.service";
 
 export const productController = {
   create: asyncHandler(
@@ -69,6 +70,7 @@ export const productController = {
     }
   ),
 
+   
   getNewArrivals: asyncHandler(
     async (
       req: Request,
@@ -81,6 +83,44 @@ export const productController = {
         await productService.getNewArrivals(
           limit
         );
+
+      res.json({
+        success: true,
+        data: products,
+      });
+    }
+  ),
+
+  // getFlashSales: asyncHandler(
+  //   async (
+  //     req: Request,
+  //     res: Response
+  //   ) => {
+  //     const limit =
+  //       Number(req.query.limit) || 10;
+
+  //     const products =
+  //       await productService.getFlashSales(
+  //         limit
+  //       );
+
+  //     res.json({
+  //       success: true,
+  //       data: products,
+  //     });
+  //   }
+  // ),
+
+  getFlashSales: asyncHandler(
+    async (req: AuthRequest, res: Response) => {
+      const limit = Number(req.query.limit) || 10;
+
+      const userId = req.user?.id; 
+
+      const products = await productService.getFlashSales(
+        limit,
+        userId
+      );
 
       res.json({
         success: true,
@@ -131,5 +171,7 @@ export const productController = {
     }
   ),
 
+
+  
   
 };

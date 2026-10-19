@@ -13,6 +13,7 @@ import {
 } from "./admin.validation";
 import { updateOrderStatusSchema } from "../order/order.validation";
 import { createCategorySchema, updateCategorySchema } from "../category/category.validation";
+import { upload } from "../../middlewares/upload.middleware";
 
 
 const router = Router();
@@ -77,14 +78,28 @@ router.patch(
 
 router.get("/stats", adminController.getStats);
 
+// router.post(
+//   "/categories",
+//   validate(createCategorySchema),
+//   adminController.createCategory
+// );
+
 router.post(
   "/categories",
+  upload.single("image"),
   validate(createCategorySchema),
   adminController.createCategory
 );
 
+// router.patch(
+//   "/categories/:id",
+//   validate(updateCategorySchema),
+//   adminController.updateCategory
+// );
+
 router.patch(
   "/categories/:id",
+  upload.single("image"),
   validate(updateCategorySchema),
   adminController.updateCategory
 );
@@ -94,4 +109,26 @@ router.delete(
   adminController.deleteCategory
 );
 
+
+router.post("/sizes", adminController.addSize);
+router.patch("/sizes/:id", adminController.updateSize);
+router.delete("/sizes/:id", adminController.deleteSize);
+
+router.post("/colors", adminController.addColor);
+router.patch("/colors/:id", adminController.updateColor);
+router.delete("/colors/:id", adminController.deleteColor);
+
+router.get("/banner-requests", adminController.getBannerRequests);
+
+router.patch("/banner-requests/:id/approve", adminController.approveBannerRequest);
+router.patch("/banner-requests/:id/reject", adminController.rejectBannerRequest);
+
+router.get("/promo-banner-requests", adminController.getPromoBannersRequests);
+
+router.patch("/promo-banner-requests/:id/approve", adminController.approvePromoBannerRequest);
+router.patch("/promo-banner-requests/:id/reject", adminController.rejectPromoBannerRequest);
+
+
+
 export default router;
+

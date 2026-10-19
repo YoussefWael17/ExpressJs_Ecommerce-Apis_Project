@@ -1,8 +1,6 @@
 import { Response } from "express";
-
-import { paymentService } from "./payment.service";
-
 import { AuthRequest } from "../../types/auth-request";
+import { paymentService } from "./payment.service";
 
 export const paymentController = {
   checkout: async (
@@ -12,16 +10,16 @@ export const paymentController = {
     try {
       const session =
         await paymentService.createCheckoutSession(
-          req.params.orderId as string,
           req.user!.id
         );
 
       res.json({
+        success: true,
         url: session.url,
       });
-
     } catch (error: any) {
       res.status(400).json({
+        success: false,
         message: error.message,
       });
     }

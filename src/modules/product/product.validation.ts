@@ -3,35 +3,37 @@ import { z } from "zod";
 export const createProductSchema = z.object({
   title: z.string().min(2),
 
-  slug: z.string().min(2),
+  // slug: z.string().min(2),
 
   description: z.string().optional(),
 
-  thumbnail: z.string().url().optional(),
+  // thumbnail: z.string().url().optional(),
 
   categoryId: z.string(),
 
-  variants: z.array(
-    z.object({
-      sku: z.string().optional(),
+  // variants: z.string(),
 
-      price: z.number().positive(),
+  // variants: z.array(
+  //   z.object({
+  //     sku: z.string().optional(),
 
-      discountPrice: z.number().optional(),
+  //     price: z.number().positive(),
 
-      stock: z.number().int().nonnegative(),
+  //     discountPrice: z.number().optional(),
 
-      sizeId: z.string().optional(),
+  //     stock: z.number().int().nonnegative(),
 
-      colorId: z.string().optional(),
-    })
-  ),
+  //     sizeId: z.string().optional(),
 
-  images: z.array(
-    z.object({
-      image: z.string().url(),
+  //     colorId: z.string().optional(),
+  //   })
+  // ),
 
-      isPrimary: z.boolean().optional(),
-    })
-  ),
+  // images: z.array(
+  //   z.object({
+  //     image: z.string().url(),
+
+  //     isPrimary: z.boolean().optional(),
+  //   })
+  // ),
 });

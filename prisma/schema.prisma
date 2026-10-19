@@ -18,11 +18,26 @@ enum Role {
   CUSTOMER
 }
 
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
 model Category {
   id        String    @id @default(uuid())
   name      String    @unique
   slug      String    @unique
-  image     String?
+  icon      String?
   products  Product[]
   createdAt DateTime  @default(now())
 }
@@ -34,7 +49,11 @@ model Product {
   description String?
   thumbnail   String?
   isActive    Boolean @default(true)
-  isSale      Boolean @default(false)
+  
+  salePercentage Int?
+  saleStartDate  DateTime?
+  saleEndDate    DateTime?
+  // isSale      Boolean @default(false)
 
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id])
@@ -49,9 +68,16 @@ model Product {
   vendorId String
   vendor   User   @relation(fields: [vendorId], references: [id])
 
+  isPublished Boolean @default(false)
+
   orderItems OrderItem[]
 
   @@index([vendorId])
+  bannerRequests BannerRequest[]
+  heroBanners HeroBanner[]
+
+  promoBannerRequests PromoBannerRequest[]
+  promoBanners PromoBanner[]
 }
 
 model ProductImage {
@@ -185,6 +211,16 @@ model User {
 
   products  Product[]
   orders    Order[]
+
+  payments  Payment[]
+
+  bannerRequests BannerRequest[]
+
+  heroBanners HeroBanner[]
+
+  promoBannerRequests PromoBannerRequest[]
+  promoBanners PromoBanner[]
+
 }
 
 enum AuthProvider {
@@ -192,13 +228,6 @@ enum AuthProvider {
   GOOGLE
 }
 
-enum OrderStatus {
-  PENDING
-  PAID
-  SHIPPED
-  DELIVERED
-  CANCELLED
-}
 
 model Order {
   id          String @id @default(uuid())
@@ -211,6 +240,8 @@ model Order {
   totalAmount Float
 
   items       OrderItem[]
+
+  payment     Payment?
 
   createdAt   DateTime @default(now())
 }
@@ -233,4 +264,129 @@ model OrderItem {
   price       Float
 
   createdAt   DateTime @default(now())
+}
+
+model Payment {
+  id      String @id @default(uuid())
+
+  userId  String
+  orderId String? @unique
+
+  user User @relation( fields: [userId], references: [id])
+
+  order Order? @relation( fields: [orderId], references: [id])
+
+  stripeSessionId String? @unique
+  amount Float
+
+  status PaymentStatus
+
+  createdAt DateTime @default(now())
+}
+
+model BannerRequest {
+  id          String   @id @default(uuid())
+
+  vendorId    String
+  vendor      User     @relation(fields: [vendorId], references: [id])
+
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+
+  status      BannerRequestStatus @default(PENDING)
+
+  note        String?
+
+  icon             String?
+  offerPercentage  Int?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum BannerRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+
+
+model HeroBanner {
+  id            String   @id @default(uuid())
+
+  title         String
+  subtitle      String?
+  image         String
+
+  icon          String?
+  offerPercentage Int?
+
+  buttonText    String   @default("Shop Now")
+  buttonLink    String
+
+  order         Int      @default(0)
+  isActive      Boolean  @default(true)
+
+  productId     String?
+  product       Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  vendorId      String?
+  vendor        User?    @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+
+model PromoBanner {
+  id              String   @id @default(uuid())
+
+  title           String
+  subtitle        String?
+  image           String?
+
+  buttonText      String   @default("Buy Now")
+  buttonLink      String
+
+  offerPercentage Int?
+
+  startDate       DateTime
+  endDate         DateTime
+
+  backgroundColor String?  @default("#000000")
+
+  isActive        Boolean  @default(true)
+
+  productId       String?
+  vendorId        String?
+
+  product         Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  vendor          User?    @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model PromoBannerRequest {
+  id              String   @id @default(uuid())
+
+  vendorId        String
+  productId       String
+
+  offerPercentage Int?
+  startDate       DateTime
+  endDate         DateTime
+
+  backgroundColor String?  @default("#000000")
+
+  note            String?
+
+  status          BannerRequestStatus @default(PENDING)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  vendor          User     @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
