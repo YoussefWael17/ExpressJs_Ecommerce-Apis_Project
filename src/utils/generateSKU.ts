@@ -1,17 +1,17 @@
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "node:crypto";
 import slugify from "slugify";
 
 export const generateSKU = (
   title: string,
   sizeId?: string,
   colorId?: string
-) => {
+): string => {
   const cleanTitle = slugify(title, {
     lower: true,
     strict: true,
   });
 
-  const shortId = uuidv4().split("-")[0];
+  const shortId = randomUUID().split("-")[0];
 
   return [
     cleanTitle,
